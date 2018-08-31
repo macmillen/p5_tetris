@@ -1,39 +1,86 @@
 
+// TODOS
+// - prevent blocks from rotating inside each other
+// - background image / transparent blocks
+
 const GRID = { x: 10, y: 21 };
 const BLOCK_SIZE = 30;
 const BLOCK_SIZE_SMALL = BLOCK_SIZE * 0.7;
 const I = 0, J = 1, L = 2, O = 3, S = 4, T = 5, Z = 6;
 const BLOCK_TYPES = [ I, J, L, O, S, T, Z ];
+const CONTROLS = 0, GAME_OVER = 1;
 const HUD_SIZE = 110;
 const RANDOM = 99;
+const ROUNDNESS = 4;
 
-var upcomingBlocks = [];
-var score = 0;
-var grid = [];
-var timer = 30;
-var animationTimer = 0;
+var upcomingBlocks;
+var score;
+var grid;
+var timer;
+var animationTimer;
 var keyTimers = [ 0, 0, 0 ];
 var savedBlock;
-var savedBlockUsed = false;
+var savedBlockUsed;
+var instantDrop;
+var gameOver;
 
 var block;
 
-function setup() {
-    createCanvas(GRID.x * BLOCK_SIZE + HUD_SIZE * 2, GRID.y * BLOCK_SIZE);
+var music;
+var sndLineCleared;
+var sndPlop;
+var font;
+var backgroundImage;
 
-    for(let a = 0; a < GRID.y; a++) {
-        pushNewLineToGrid();
-    }
+var btnControls = new Button(HUD_SIZE / 2, BLOCK_SIZE * GRID.y / 2, HUD_SIZE - 20, 30, "CONTROLS");
+var windowControls = new PopUpWindow(HUD_SIZE + GRID.x * BLOCK_SIZE / 2, GRID.y * BLOCK_SIZE / 2, GRID.x * BLOCK_SIZE + HUD_SIZE / 4, GRID.y * BLOCK_SIZE * 0.8, CONTROLS);
+var windowGameOver = new PopUpWindow(HUD_SIZE + GRID.x * BLOCK_SIZE / 2, GRID.y * BLOCK_SIZE / 2, GRID.x * BLOCK_SIZE + HUD_SIZE / 4, GRID.y * BLOCK_SIZE * 0.8, GAME_OVER);
+
+function preload() {
+    music = loadSound('../assets/music.mp3');
+    sndPlop = loadSound('../assets/plop.mp3');
+    sndLineCleared = loadSound('../assets/line_cleared.wav');
+    font = loadFont('../assets/font.ttf');
+    backgroundImage = loadImage('../assets/background.jpg');
+}
+
+function init() {
+    grid = [];
+    upcomingBlocks = [];
+    score = 0;
+    gameOver = false;
+    timer = Date.now() + 1000;
+    animationTimer = 0;
+    savedBlock = null;
+    savedBlockUsed = false;
+    instantDrop = false;
+
+    block = new Block(RANDOM, CENTER);
 
     for(let i = 0; i < 5; i++) {
         upcomingBlocks.push(new Block(RANDOM, RIGHT));
     }
 
-    block = new Block(RANDOM, CENTER);
+    for(let a = 0; a < GRID.y; a++) {
+        pushNewLineToGrid();
+    }
+}
+
+function setup() {
+    createCanvas(GRID.x * BLOCK_SIZE + HUD_SIZE * 2, GRID.y * BLOCK_SIZE);
+
+    init();
+
+    textFont(font);
+
+    music.loop();
 }
 
 function draw() {
-    background(0);
+    background(34, 34, 34, 150);
+    image(backgroundImage,0,0);
+    fill(255, 180);
+    rect(0, 0, width, height);
 
     // BLOCK SPAWN ------------------------------------------------------------
 
@@ -43,7 +90,7 @@ function draw() {
 
     // HUD --------------------------------------------------------------------
 
-    fill("#333");
+    fill(51, 51, 51, 150);
     noStroke();
     rect(0, 0, HUD_SIZE, height);
     rect(GRID.x * BLOCK_SIZE + HUD_SIZE, 0, HUD_SIZE, height);
@@ -52,12 +99,12 @@ function draw() {
     rect(10, 10, HUD_SIZE - 20, HUD_SIZE - 20);
     
     
-    
     fill(255);
     textSize(20);
     textAlign(CENTER);
     text("SCORE \n" + score, width - HUD_SIZE / 2, 20);
     
+    btnControls.draw();
     
     // DRAW BLOCKS ------------------------------------------------------------
     
@@ -80,7 +127,7 @@ function draw() {
         for(let i = 0; i < GRID.x; i++) {
             if(grid[a][i] !== -1) {
                 fill(grid[a][i]);
-                rect(HUD_SIZE + i * BLOCK_SIZE, a * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                rect(HUD_SIZE + i * BLOCK_SIZE, a * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, ROUNDNESS);
                 cubesInRow++;
             }
             if(cubesInRow === GRID.x) {
@@ -88,9 +135,6 @@ function draw() {
             }
         }
     }
-    // fill("#333");
-    // noStroke();
-    // rect(HUD_SIZE, 0, GRID.x * BLOCK_SIZE, BLOCK_SIZE - 10);
 
     // REMOVE BLOCKS ----------------------------------------------------------
 
@@ -115,6 +159,8 @@ function draw() {
                 case 4: score += 100; break;
             }
             animationTimer = -1;
+            timer = Date.now() + 1000;
+            sndLineCleared.play();
         }
         animationTimer++;
         return;
@@ -133,7 +179,12 @@ function draw() {
         }
         keyTimers[1]++;
     } else if(keyIsDown(DOWN_ARROW)) {
-        block.modPos(0, 1);
+        if(keyTimers[2] < 1 || keyTimers[2] > 30) {
+            if(frameCount % 3 === 0) {
+                block.modPos(0, 1);
+                timer = Date.now() + 1000;
+            }
+        }
     } else {
         keyTimers[0] = 0;
         keyTimers[1] = 0;
@@ -143,17 +194,44 @@ function draw() {
 
     timer--;
 
-    if(timer === 0) {
+    if(timer < Date.now() || instantDrop) {
         block.modPos(0, 1);
-        timer = 50;
+        timer = Date.now() + 1000;
     }
+
+    windowControls.draw();
+    windowGameOver.draw();
     
+}
+
+function mousePressed() {
+    if(btnControls.overlaps()) {
+        windowControls.show();
+    }
 }
 
 function keyPressed() {
     if(keyCode === UP_ARROW) {
         block.rotate();
     }
+
+    if(keyCode === 27) { // ESCAPE
+        windowControls.hide();
+        if(gameOver) {
+            windowGameOver.hide();
+            init();
+        }
+    }
+
+    if(keyCode === 32) { // SPACE
+        instantDrop = true;
+    }
+
+    if(keyCode === 82) { // R
+        init();
+        windowGameOver.hide();
+    }
+
     if(keyCode === 67) { // C
         if(!savedBlockUsed) {
             savedBlockUsed = true;

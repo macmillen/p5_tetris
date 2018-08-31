@@ -9,6 +9,7 @@ class Block {
 
         this.pos = pos;
         this.dead = false;
+        this.stepsDown = 0;
 
         // [ 00  10  20  30 ]
         // [ 01  11  21  31 ]
@@ -23,7 +24,7 @@ class Block {
                     break;
             case J: this.cubes = [ { x: 0,  y: 0 }, { x: 0,  y: 1 }, { x: 1,  y: 1 }, { x: 2, y: 1 } ];
                     this.color = color("#0000F0");
-                    this.anchor = 3;
+                    this.anchor = 1;
                     this.size = { w: 3, h: 2 };
                     break;
             case L: this.cubes = [ { x: 0,  y: 1 }, { x: 1,  y: 1 }, { x: 2,  y: 1 }, { x: 2, y: 0 } ];
@@ -67,19 +68,53 @@ class Block {
     }
 
     draw(y) {
+
+        // DRAW GHOST BLOCK
+        // let yPosGhostBlock = GRID.y - 1;
+        // for(let i = GRID.y - 1; i >= 0; i--) {
+        //     let collision = false;
+        //     for(let c of this.cubes) {
+        //         if(grid[i][c.x] !== -1) {
+        //             collision = true;
+        //             yPosGhostBlock = i - 1;
+        //             break;
+        //         }
+        //     }
+        //     if(collision) {
+        //         break;
+        //     }
+        // }
+        
         stroke(0);
         fill(this.color);
+
+        let loopCount = 0;
+        let yCount = [ 0, 0, 0, 0 ];
+
         for(let c of this.cubes) {
             switch(this.pos) {
                 case LEFT:
-                    rect(c.x * BLOCK_SIZE_SMALL + 10 + (HUD_SIZE - 20) / 2 - this.size.w * BLOCK_SIZE_SMALL / 2, c.y * BLOCK_SIZE_SMALL + 10 + (HUD_SIZE - 20) / 2 - this.size.h * BLOCK_SIZE_SMALL / 2, BLOCK_SIZE_SMALL, BLOCK_SIZE_SMALL);
+                    rect(c.x * BLOCK_SIZE_SMALL + 10 + (HUD_SIZE - 20) / 2 - this.size.w * BLOCK_SIZE_SMALL / 2, c.y * BLOCK_SIZE_SMALL + 10 + (HUD_SIZE - 20) / 2 - this.size.h * BLOCK_SIZE_SMALL / 2, BLOCK_SIZE_SMALL, BLOCK_SIZE_SMALL, ROUNDNESS);
                     break;
                 case CENTER:
-                    rect(c.x * BLOCK_SIZE + HUD_SIZE, c.y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                    while(c.y + yCount[loopCount] + 1 !== GRID.y && grid[c.y + yCount[loopCount] + 1][c.x] === -1) {
+                        yCount[loopCount]++;
+                    }
                     break;
                 case RIGHT:
-                    rect(width - 0.5 * HUD_SIZE - this.size.w * BLOCK_SIZE_SMALL / 2 + c.x * BLOCK_SIZE_SMALL, c.y * BLOCK_SIZE_SMALL + 110 * y + 80, BLOCK_SIZE_SMALL, BLOCK_SIZE_SMALL);
+                    rect(width - 0.5 * HUD_SIZE - this.size.w * BLOCK_SIZE_SMALL / 2 + c.x * BLOCK_SIZE_SMALL, c.y * BLOCK_SIZE_SMALL + 110 * y + 80, BLOCK_SIZE_SMALL, BLOCK_SIZE_SMALL, ROUNDNESS);
                     break;
+            }
+            loopCount++;
+        }
+
+        if(this.pos === CENTER) {
+            let maxGhostY = min(yCount);
+            for(let c of this.cubes) {
+                fill(color(255, 80));
+                rect(c.x * BLOCK_SIZE + HUD_SIZE, (maxGhostY + c.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, ROUNDNESS);
+                fill(this.color);
+                rect(c.x * BLOCK_SIZE + HUD_SIZE, c.y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, ROUNDNESS);
             }
         }
     }
@@ -101,18 +136,31 @@ class Block {
                 this.updateWithGrid();
                 return;
             }
-
+        }
+        if(y === 1) {
+            this.stepsDown++;
         }
         this.cubes = newCubes;
+
+        if(instantDrop) {
+            this.modPos(0, 1);
+        }
         return 0;
     }
 
     updateWithGrid() {
+        if(this.stepsDown === 0) {
+            gameOver = true;
+            windowGameOver.show();
+            console.log(this.stepsDown);
+        }
         for(let c of this.cubes) {
             grid[c.y][c.x] = this.color;
         }
         this.dead = true;
         savedBlockUsed = false;
+        instantDrop = false;
+        sndPlop.play();
     }
 
     rotate() {
@@ -120,6 +168,7 @@ class Block {
             return;
         
         let newCubes = [];
+        // let stepsOutOfBounds = [ 0, 0, 0, 0 ]; // [ L, R, T, B ]
         for(let c of this.cubes) {
             let x = c.x - this.cubes[this.anchor].x; // translate to anchor
             let y = c.y - this.cubes[this.anchor].y;
@@ -130,7 +179,19 @@ class Block {
             rx += this.cubes[this.anchor].x;         // translate back
             ry += this.cubes[this.anchor].y;
 
+            // if(rx < 0)          stepsOutOfBounds[0] = rx;
+            // if(rx > GRID.x - 1) stepsOutOfBounds[1] = rx;
+            // if(ry < 0)          stepsOutOfBounds[2] = ry;
+            // if(ry > GRID.y - 1) stepsOutOfBounds[3] = ry;
+
             newCubes.push({ x: rx, y: ry });
+        }
+
+        for(let c of newCubes) {
+            while(c.x < 0) { for(let c of newCubes) { c.x++; } }
+            while(c.x > GRID.x - 1) { for(let c of newCubes) { c.x--; } }
+            while(c.y < 0) { for(let c of newCubes) { c.y++; } }
+            while(c.y > GRID.y - 1) { for(let c of newCubes) { c.y--; } }
         }
         this.cubes = newCubes;
     }

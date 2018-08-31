@@ -1,0 +1,25 @@
+html, body {
+    height: 100%;
+}
+
+#defaultCanvas0 {
+    border-radius: 15px;
+    border: 2px #555 solid;
+
+    max-width: 100% !important;
+    width: 60vh !important;
+    height: auto !important;
+}
+  
+body {
+    background-color: #202d2d;
+    
+    margin: 0;
+    display: flex;
+  
+    /* This centers our sketch horizontally. */
+    justify-content: center;
+  
+    /* This centers our sketch vertically. */
+    align-items: center;
+}
