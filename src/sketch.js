@@ -1,7 +1,6 @@
 
 // TODOS
-// - prevent blocks from rotating inside each other
-// - background image / transparent blocks
+// Different sounds for different points
 
 const GRID = { x: 10, y: 21 };
 const BLOCK_SIZE = 30;
@@ -12,6 +11,8 @@ const CONTROLS = 0, GAME_OVER = 1;
 const HUD_SIZE = 110;
 const RANDOM = 99;
 const ROUNDNESS = 4;
+const LINES_TO_CLEAR = [ 10, 15, 20, 25, 30, 35, 50, 60, 70, 100 ];
+const MILLIS_PER_LEVEL = [ 1000, 900, 800, 700, 600, 500, 400, 300, 250, 200 ];
 
 var upcomingBlocks;
 var score;
@@ -23,6 +24,8 @@ var savedBlock;
 var savedBlockUsed;
 var instantDrop;
 var gameOver;
+var level;
+var linesToClear;
 
 var block;
 
@@ -49,11 +52,13 @@ function init() {
     upcomingBlocks = [];
     score = 0;
     gameOver = false;
-    timer = Date.now() + 1000;
+    timer = Date.now() + MILLIS_PER_LEVEL[0];
     animationTimer = 0;
     savedBlock = null;
     savedBlockUsed = false;
     instantDrop = false;
+    level = 0;
+    linesToClear = LINES_TO_CLEAR[0];
 
     block = new Block(RANDOM, CENTER);
 
@@ -77,10 +82,6 @@ function setup() {
 }
 
 function draw() {
-    background(34, 34, 34, 150);
-    image(backgroundImage,0,0);
-    fill(255, 180);
-    rect(0, 0, width, height);
 
     // BLOCK SPAWN ------------------------------------------------------------
 
@@ -90,6 +91,11 @@ function draw() {
 
     // HUD --------------------------------------------------------------------
 
+    // background("#222");
+    image(backgroundImage, 0, 0);
+    fill(255, 180);
+    rect(0, 0, width, height);
+
     fill(51, 51, 51, 150);
     noStroke();
     rect(0, 0, HUD_SIZE, height);
@@ -97,13 +103,25 @@ function draw() {
     
     fill("#111");
     rect(10, 10, HUD_SIZE - 20, HUD_SIZE - 20);
-    
+    rect(10, HUD_SIZE, HUD_SIZE - 20, HUD_SIZE - 20);
+    rect(10, HUD_SIZE * 2 - 10, HUD_SIZE - 20, HUD_SIZE - 20);
     
     fill(255);
     textSize(20);
     textAlign(CENTER);
     text("SCORE \n" + score, width - HUD_SIZE / 2, 20);
     
+    textSize(16);
+    text("Lines to clear", HUD_SIZE / 2, HUD_SIZE + 17);
+    text("Level", HUD_SIZE / 2, HUD_SIZE * 2 - 10 + 17);
+    textSize(40);
+    if(level !== MILLIS_PER_LEVEL.length - 1) {
+        text(linesToClear, HUD_SIZE / 2, 1.5 * HUD_SIZE + 8);
+    } else {
+        text("-", HUD_SIZE / 2, 1.5 * HUD_SIZE + 8);
+    }
+    text((level + 1), HUD_SIZE / 2, 2.5 * HUD_SIZE - 10 + 8);
+
     btnControls.draw();
     
     // DRAW BLOCKS ------------------------------------------------------------
@@ -158,8 +176,12 @@ function draw() {
                 case 3: score += 60; break;
                 case 4: score += 100; break;
             }
+            linesToClear = linesToClear - rowsToDelete.length;
+            if(linesToClear <= 0 && level !== MILLIS_PER_LEVEL.length - 1) {
+                linesToClear = LINES_TO_CLEAR[++level] + linesToClear;
+            }
             animationTimer = -1;
-            timer = Date.now() + 1000;
+            timer = Date.now() + MILLIS_PER_LEVEL[level];
             sndLineCleared.play();
         }
         animationTimer++;
@@ -182,7 +204,7 @@ function draw() {
         if(keyTimers[2] < 1 || keyTimers[2] > 30) {
             if(frameCount % 3 === 0) {
                 block.modPos(0, 1);
-                timer = Date.now() + 1000;
+                timer = Date.now() + MILLIS_PER_LEVEL[level];
             }
         }
     } else {
@@ -196,7 +218,7 @@ function draw() {
 
     if(timer < Date.now() || instantDrop) {
         block.modPos(0, 1);
-        timer = Date.now() + 1000;
+        timer = Date.now() + MILLIS_PER_LEVEL[level];
     }
 
     windowControls.draw();

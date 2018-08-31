@@ -69,22 +69,6 @@ class Block {
 
     draw(y) {
 
-        // DRAW GHOST BLOCK
-        // let yPosGhostBlock = GRID.y - 1;
-        // for(let i = GRID.y - 1; i >= 0; i--) {
-        //     let collision = false;
-        //     for(let c of this.cubes) {
-        //         if(grid[i][c.x] !== -1) {
-        //             collision = true;
-        //             yPosGhostBlock = i - 1;
-        //             break;
-        //         }
-        //     }
-        //     if(collision) {
-        //         break;
-        //     }
-        // }
-        
         stroke(0);
         fill(this.color);
 
@@ -152,7 +136,6 @@ class Block {
         if(this.stepsDown === 0) {
             gameOver = true;
             windowGameOver.show();
-            console.log(this.stepsDown);
         }
         for(let c of this.cubes) {
             grid[c.y][c.x] = this.color;
@@ -168,7 +151,6 @@ class Block {
             return;
         
         let newCubes = [];
-        // let stepsOutOfBounds = [ 0, 0, 0, 0 ]; // [ L, R, T, B ]
         for(let c of this.cubes) {
             let x = c.x - this.cubes[this.anchor].x; // translate to anchor
             let y = c.y - this.cubes[this.anchor].y;
@@ -179,19 +161,18 @@ class Block {
             rx += this.cubes[this.anchor].x;         // translate back
             ry += this.cubes[this.anchor].y;
 
-            // if(rx < 0)          stepsOutOfBounds[0] = rx;
-            // if(rx > GRID.x - 1) stepsOutOfBounds[1] = rx;
-            // if(ry < 0)          stepsOutOfBounds[2] = ry;
-            // if(ry > GRID.y - 1) stepsOutOfBounds[3] = ry;
-
             newCubes.push({ x: rx, y: ry });
         }
 
         for(let c of newCubes) {
-            while(c.x < 0) { for(let c of newCubes) { c.x++; } }
+            while(c.x < 0)          { for(let c of newCubes) { c.x++; } }
             while(c.x > GRID.x - 1) { for(let c of newCubes) { c.x--; } }
-            while(c.y < 0) { for(let c of newCubes) { c.y++; } }
+            while(c.y < 0)          { for(let c of newCubes) { c.y++; } }
             while(c.y > GRID.y - 1) { for(let c of newCubes) { c.y--; } }
+        }
+        for(let c of newCubes) {
+            if(grid[c.y][c.x] !== -1)
+                return;
         }
         this.cubes = newCubes;
     }

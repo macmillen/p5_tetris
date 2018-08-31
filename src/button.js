@@ -27,6 +27,7 @@ class Button {
             fill(255);
         }
         textSize(14);
+        textAlign(CENTER);
         text(this.txt, this.x + this.w / 2, this.y + this.h / 2 + 5);
     }
 }
