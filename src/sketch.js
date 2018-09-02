@@ -12,7 +12,7 @@ const HUD_SIZE = 110;
 const RANDOM = 99;
 const ROUNDNESS = 4;
 const LINES_TO_CLEAR = [ 10, 15, 20, 25, 30, 35, 50, 60, 70, 100 ];
-const MILLIS_PER_LEVEL = [ 1000, 900, 800, 700, 600, 500, 400, 300, 250, 200 ];
+const MILLIS_PER_LEVEL = [ 1000, 800, 620, 470, 350, 250, 180, 140, 100, 70 ];
 
 var upcomingBlocks;
 var score;
@@ -26,6 +26,7 @@ var instantDrop;
 var gameOver;
 var level;
 var linesToClear;
+var paused;
 
 var block;
 
@@ -59,6 +60,7 @@ function init() {
     instantDrop = false;
     level = 0;
     linesToClear = LINES_TO_CLEAR[0];
+    paused = false;
 
     block = new Block(RANDOM, CENTER);
 
@@ -247,6 +249,16 @@ function keyPressed() {
 
     if(keyCode === 32) { // SPACE
         instantDrop = true;
+    }
+
+    if(keyCode === 80) { // P
+        paused = !paused;
+        if(paused) {
+            rect(30, height / 2 - 100, width - 60, 200);
+            noLoop();
+        } else {
+            loop();
+        }
     }
 
     if(keyCode === 82) { // R

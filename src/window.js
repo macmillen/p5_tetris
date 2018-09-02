@@ -29,7 +29,8 @@ class PopUpWindow {
                 Rotate:\n
                 Hold:\n
                 Restart:\n
-                `, this.x, this.y + 30);
+                Pause:\n
+                `, this.x - 20, this.y + 30);
     
                 fill("#C4E538");
                 text(`
@@ -40,12 +41,13 @@ class PopUpWindow {
                 UP Arrow\n
                 C\n
                 R\n
-                `, this.x + this.w / 2 - 30, this.y + 30);
+                P\n
+                `, this.x + this.w / 2 - 50, this.y + 30);
     
                 fill("255")
                 textAlign(CENTER);
                 textSize(30);
-                text("Press ESC to close", this.x + this.w / 2, this.y + this.h - 80);
+                text("Press ESC to close", this.x + this.w / 2, this.y + this.h - 40);
             } else if(this.mode === GAME_OVER) {
                 fill(255);
                 noStroke();
