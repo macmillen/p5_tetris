@@ -12,7 +12,8 @@ html, body {
 }
   
 body {
-    background-color: #202d2d;
+    background-image: linear-gradient(rgb(6,26,50),black);
+    /* background-color: #202d2d; */
     
     margin: 0;
     display: flex;
