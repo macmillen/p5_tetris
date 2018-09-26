@@ -1,16 +1,17 @@
 
 class PopUpWindow {
     
-    constructor(x, y, w, h, mode) {
+    constructor(x, y, w, h) {
         this.display = false;
         this.x = x - w / 2;
         this.y = y - h / 2;
         this.w = w;
         this.h = h;
-        this.mode = mode;
+        this.mode = null;
     }
 
     draw() {
+        push();
         if(this.display) {
             stroke(255);
             fill(0, 150);
@@ -60,10 +61,17 @@ class PopUpWindow {
                 text(score, this.x + this.w / 2, this.y + this.h  * 0.60);
                 textSize(35);
                 text("Press R\nto restart", this.x + this.w / 2, this.y + this.h  * 0.77);
+            } else if(this.mode === PAUSE) {
+                fill(255);
+                noStroke();
+                textAlign(CENTER);
+                textSize(50);
+                text("GAME PAUSED", this.x + this.w / 2, this.y + this.h * 0.25);
             }
 
             noLoop();
         }
+        pop();
     }
 
     hide() {
@@ -71,8 +79,9 @@ class PopUpWindow {
         loop();
     }
 
-    show() {
+    show(mode) {
         this.display = true;
+        this.mode = mode;
     }
 
 }

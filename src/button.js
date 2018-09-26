@@ -15,10 +15,8 @@ class Button {
     draw() {
         if(this.overlaps()) {
             fill(255);
-            stroke(0);
         } else {
             fill(0);
-            stroke(255);
         }
         rect(this.x, this.y, this.w, this.h);
         if(this.overlaps()) {

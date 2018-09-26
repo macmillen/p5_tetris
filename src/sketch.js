@@ -7,7 +7,7 @@ const BLOCK_SIZE = 30;
 const BLOCK_SIZE_SMALL = BLOCK_SIZE * 0.7;
 const I = 0, J = 1, L = 2, O = 3, S = 4, T = 5, Z = 6;
 const BLOCK_TYPES = [ I, J, L, O, S, T, Z ];
-const CONTROLS = 0, GAME_OVER = 1;
+const CONTROLS = 0, GAME_OVER = 1, PAUSE = 2;
 const HUD_SIZE = 110;
 const RANDOM = 99;
 const ROUNDNESS = 4;
@@ -26,7 +26,6 @@ var instantDrop;
 var gameOver;
 var level;
 var linesToClear;
-var paused;
 
 var block;
 
@@ -34,18 +33,15 @@ var music;
 var sndLineCleared;
 var sndPlop;
 var font;
-var backgroundImage;
 
 var btnControls = new Button(HUD_SIZE / 2, BLOCK_SIZE * GRID.y / 2, HUD_SIZE - 20, 30, "CONTROLS");
-var windowControls = new PopUpWindow(HUD_SIZE + GRID.x * BLOCK_SIZE / 2, GRID.y * BLOCK_SIZE / 2, GRID.x * BLOCK_SIZE + HUD_SIZE / 4, GRID.y * BLOCK_SIZE * 0.8, CONTROLS);
-var windowGameOver = new PopUpWindow(HUD_SIZE + GRID.x * BLOCK_SIZE / 2, GRID.y * BLOCK_SIZE / 2, GRID.x * BLOCK_SIZE + HUD_SIZE / 4, GRID.y * BLOCK_SIZE * 0.8, GAME_OVER);
+var window = new PopUpWindow(HUD_SIZE + GRID.x * BLOCK_SIZE / 2, GRID.y * BLOCK_SIZE / 2, GRID.x * BLOCK_SIZE + HUD_SIZE / 4, GRID.y * BLOCK_SIZE * 0.8);
 
 function preload() {
     music = loadSound('../assets/music.mp3');
     sndPlop = loadSound('../assets/plop.mp3');
     sndLineCleared = loadSound('../assets/line_cleared.wav');
     font = loadFont('../assets/font.ttf');
-    backgroundImage = loadImage('../assets/background.jpg');
 }
 
 function init() {
@@ -60,7 +56,6 @@ function init() {
     instantDrop = false;
     level = 0;
     linesToClear = LINES_TO_CLEAR[0];
-    paused = false;
 
     block = new Block(RANDOM, CENTER);
 
@@ -93,13 +88,10 @@ function draw() {
 
     // HUD --------------------------------------------------------------------
 
-    // background("#222");
-    image(backgroundImage, 0, 0);
-    fill(255, 180);
-    rect(0, 0, width, height);
+    // background(0);
+    setGradient(0, 0, width, height, color(0), color(6, 26, 50));
 
     fill(51, 51, 51, 150);
-    noStroke();
     rect(0, 0, HUD_SIZE, height);
     rect(GRID.x * BLOCK_SIZE + HUD_SIZE, 0, HUD_SIZE, height);
     
@@ -125,7 +117,7 @@ function draw() {
     text((level + 1), HUD_SIZE / 2, 2.5 * HUD_SIZE - 10 + 8);
 
     btnControls.draw();
-    
+
     // DRAW BLOCKS ------------------------------------------------------------
     
     // UPCOMING
@@ -223,14 +215,13 @@ function draw() {
         timer = Date.now() + MILLIS_PER_LEVEL[level];
     }
 
-    windowControls.draw();
-    windowGameOver.draw();
+    window.draw();
     
 }
 
 function mousePressed() {
     if(btnControls.overlaps()) {
-        windowControls.show();
+        window.show(CONTROLS);
     }
 }
 
@@ -240,9 +231,8 @@ function keyPressed() {
     }
 
     if(keyCode === 27) { // ESCAPE
-        windowControls.hide();
+        window.hide();
         if(gameOver) {
-            windowGameOver.hide();
             init();
         }
     }
@@ -252,18 +242,12 @@ function keyPressed() {
     }
 
     if(keyCode === 80) { // P
-        paused = !paused;
-        if(paused) {
-            rect(30, height / 2 - 100, width - 60, 200);
-            noLoop();
-        } else {
-            loop();
-        }
+        window.show(PAUSE);
     }
 
     if(keyCode === 82) { // R
         init();
-        windowGameOver.hide();
+        window.hide();
     }
 
     if(keyCode === 67) { // C
@@ -292,4 +276,17 @@ function pushNewLineToGrid() {
     for(let i = 0; i < GRID.x; i++) {
         grid[0].push(-1);
     }
+}
+
+function setGradient(x, y, w, h, c1, c2) {
+    push();
+    noFill();
+  
+    for (var i = y; i <= y+h; i++) {
+        var inter = map(i, y, y+h, 0, 1);
+        var c = lerpColor(c1, c2, inter);
+        stroke(c);
+        line(x, i, x+w, i);
+    }
+    pop();
 }

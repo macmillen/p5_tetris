@@ -9,7 +9,6 @@ class Block {
 
         this.pos = pos;
         this.dead = false;
-        this.stepsDown = 0;
 
         // [ 00  10  20  30 ]
         // [ 01  11  21  31 ]
@@ -18,37 +17,37 @@ class Block {
 
         switch(this.type) {
             case I: this.cubes = [ { x: 0,  y: 0 }, { x: 1,  y: 0 }, { x: 2,  y: 0 }, { x: 3, y: 0 } ];
-                    this.color = color("#00F0F0");
+                    this.color = color("#16a085");
                     this.anchor = 2;
                     this.size = { w: 4, h: 1 };
                     break;
             case J: this.cubes = [ { x: 0,  y: 0 }, { x: 0,  y: 1 }, { x: 1,  y: 1 }, { x: 2, y: 1 } ];
-                    this.color = color("#0000F0");
+                    this.color = color("#3498db");
                     this.anchor = 1;
                     this.size = { w: 3, h: 2 };
                     break;
             case L: this.cubes = [ { x: 0,  y: 1 }, { x: 1,  y: 1 }, { x: 2,  y: 1 }, { x: 2, y: 0 } ];
-                    this.color = color("#F0A000");
+                    this.color = color("#e67e22");
                     this.anchor = 2;
                     this.size = { w: 3, h: 2 };
                     break;
             case O: this.cubes = [ { x: 1,  y: 0 }, { x: 2,  y: 0 }, { x: 1,  y: 1 }, { x: 2, y: 1 } ];
-                    this.color = color("#F0F000");
+                    this.color = color("#f1c40f");
                     this.anchor = -1;
                     this.size = { w: 4, h: 2 };
                     break;
             case S: this.cubes = [ { x: 1,  y: 0 }, { x: 2,  y: 0 }, { x: 0,  y: 1 }, { x: 1, y: 1 } ];
-                    this.color = color("#00F000");
+                    this.color = color("#27ae60");
                     this.anchor = 3;
                     this.size = { w: 3, h: 2 };
                     break;
             case T: this.cubes = [ { x: 1,  y: 0 }, { x: 0,  y: 1 }, { x: 1,  y: 1 }, { x: 2, y: 1 } ];
-                    this.color = color("#A000F0");
+                    this.color = color("#8e44ad");
                     this.anchor = 2;
                     this.size = { w: 3, h: 2 };
                     break;
             case Z: this.cubes = [ { x: 0,  y: 0 }, { x: 1,  y: 0 }, { x: 1,  y: 1 }, { x: 2, y: 1 } ];
-                    this.color = color("#F00000");
+                    this.color = color("#e74c3c");
                     this.anchor = 2;
                     this.size = { w: 3, h: 2 };
                     break;
@@ -69,7 +68,6 @@ class Block {
 
     draw(y) {
 
-        stroke(0);
         fill(this.color);
 
         let loopCount = 0;
@@ -121,9 +119,6 @@ class Block {
                 return;
             }
         }
-        if(y === 1) {
-            this.stepsDown++;
-        }
         this.cubes = newCubes;
 
         if(instantDrop) {
@@ -133,11 +128,11 @@ class Block {
     }
 
     updateWithGrid() {
-        if(this.stepsDown === 0) {
-            gameOver = true;
-            windowGameOver.show();
-        }
         for(let c of this.cubes) {
+            if(grid[c.y][c.x] !== -1) {
+                gameOver = true;
+                window.show(GAME_OVER);
+            }
             grid[c.y][c.x] = this.color;
         }
         this.dead = true;
