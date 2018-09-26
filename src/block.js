@@ -9,6 +9,9 @@ class Block {
 
         this.pos = pos;
         this.dead = false;
+        this.lastChanceStarted = false;
+        this.lastChanceTimerTimeIsUp;
+        this.lastChanceTimerNotMoved;
 
         // [ 00  10  20  30 ]
         // [ 01  11  21  31 ]
@@ -128,10 +131,19 @@ class Block {
     }
 
     updateWithGrid() {
+        if(!this.lastChanceStarted) {
+            this.lastChanceStarted = true;
+            this.lastChanceTimerTimeIsUp = Date.now();
+            this.lastChanceTimerNotMoved = Date.now();
+        }
+        if(this.lastChanceTimerNotMoved + 500 > Date.now() && this.lastChanceTimerTimeIsUp + 2000 > Date.now() && !instantDrop) {
+            return;
+        }
+
         for(let c of this.cubes) {
             if(grid[c.y][c.x] !== -1) {
                 gameOver = true;
-                window.show(GAME_OVER);
+                popUpWindow.show(GAME_OVER);
             }
             grid[c.y][c.x] = this.color;
         }
@@ -144,8 +156,8 @@ class Block {
     rotate() {
         if(this.anchor === -1) // for O-block
             return;
-        
-        let newCubes = [];
+
+            let newCubes = [];
         for(let c of this.cubes) {
             let x = c.x - this.cubes[this.anchor].x; // translate to anchor
             let y = c.y - this.cubes[this.anchor].y;
@@ -165,6 +177,30 @@ class Block {
             while(c.y < 0)          { for(let c of newCubes) { c.y++; } }
             while(c.y > GRID.y - 1) { for(let c of newCubes) { c.y--; } }
         }
+
+
+        // TODO: when rotate and touched ground -> lastChanceStarted = true
+        //   --> then always after moving up, move down 
+
+        // IF TOUCHED GROUND
+        // set cube the most far at the bottom on top of 
+
+        // if(this.lastChanceStarted) {
+        //     for(let c of newCubes) {
+        //         while()                
+        //     }
+        // }
+
+        for(let i = 0; i < 4; i++) {
+            let c = newCubes[i];
+            if(grid[c.y][c.x] !== -1) {
+                i = 0;
+                for(let c of newCubes) {
+                    c.y--;
+                }
+            }
+        }
+
         for(let c of newCubes) {
             if(grid[c.y][c.x] !== -1)
                 return;

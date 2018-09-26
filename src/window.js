@@ -65,8 +65,8 @@ class PopUpWindow {
                 fill(255);
                 noStroke();
                 textAlign(CENTER);
-                textSize(50);
-                text("GAME PAUSED", this.x + this.w / 2, this.y + this.h * 0.25);
+                textSize(60);
+                text("GAME\nPAUSED", this.x + this.w / 2, this.y + this.h * 0.25);
             }
 
             noLoop();

@@ -11,11 +11,13 @@ const CONTROLS = 0, GAME_OVER = 1, PAUSE = 2;
 const HUD_SIZE = 110;
 const RANDOM = 99;
 const ROUNDNESS = 4;
-const LINES_TO_CLEAR = [ 10, 15, 20, 25, 30, 35, 50, 60, 70, 100 ];
-const MILLIS_PER_LEVEL = [ 1000, 800, 620, 470, 350, 250, 180, 140, 100, 70 ];
+const LINES_TO_CLEAR   = [ 10,   15,  20,  25,  30,  35,  40,  45,  50,  55, 60, 65, 70 ];
+const MILLIS_PER_LEVEL = [ 1000, 800, 620, 470, 350, 250, 180, 140, 100, 70, 50, 40, 30 ];
 
 var upcomingBlocks;
 var score;
+var scoreToAdd;
+var scoreFontSize;
 var grid;
 var timer;
 var animationTimer;
@@ -26,6 +28,7 @@ var instantDrop;
 var gameOver;
 var level;
 var linesToClear;
+var paused = false;
 
 var block;
 
@@ -35,7 +38,7 @@ var sndPlop;
 var font;
 
 var btnControls = new Button(HUD_SIZE / 2, BLOCK_SIZE * GRID.y / 2, HUD_SIZE - 20, 30, "CONTROLS");
-var window = new PopUpWindow(HUD_SIZE + GRID.x * BLOCK_SIZE / 2, GRID.y * BLOCK_SIZE / 2, GRID.x * BLOCK_SIZE + HUD_SIZE / 4, GRID.y * BLOCK_SIZE * 0.8);
+var popUpWindow = new PopUpWindow(HUD_SIZE + GRID.x * BLOCK_SIZE / 2, GRID.y * BLOCK_SIZE / 2, GRID.x * BLOCK_SIZE + HUD_SIZE / 4, GRID.y * BLOCK_SIZE * 0.8);
 
 function preload() {
     music = loadSound('../assets/music.mp3');
@@ -48,6 +51,8 @@ function init() {
     grid = [];
     upcomingBlocks = [];
     score = 0;
+    scoreToAdd = 0;
+    scoreFontSize = 0;
     gameOver = false;
     timer = Date.now() + MILLIS_PER_LEVEL[0];
     animationTimer = 0;
@@ -103,7 +108,9 @@ function draw() {
     fill(255);
     textSize(20);
     textAlign(CENTER);
-    text("SCORE \n" + score, width - HUD_SIZE / 2, 20);
+    text("SCORE", width - HUD_SIZE / 2, 20);
+    textSize(20 + scoreFontSize);
+    text(score - scoreToAdd, width - HUD_SIZE / 2, 50);
     
     textSize(16);
     text("Lines to clear", HUD_SIZE / 2, HUD_SIZE + 17);
@@ -165,10 +172,10 @@ function draw() {
                 pushNewLineToGrid();
             }
             switch (rowsToDelete.length) {
-                case 1: score += 10; break;
-                case 2: score += 30; break;
-                case 3: score += 60; break;
-                case 4: score += 100; break;
+                case 1: score += 10; scoreToAdd += 10; break;
+                case 2: score += 30; scoreToAdd += 30; break;
+                case 3: score += 60; scoreToAdd += 60; break;
+                case 4: score += 100; scoreToAdd += 100; break;
             }
             linesToClear = linesToClear - rowsToDelete.length;
             if(linesToClear <= 0 && level !== MILLIS_PER_LEVEL.length - 1) {
@@ -210,18 +217,30 @@ function draw() {
 
     timer--;
 
+    if(scoreToAdd > 0 && scoreFontSize <= 15) {
+        if(scoreToAdd < 50) {
+            scoreToAdd -= 10;
+        } else {
+            scoreToAdd -= 20;
+        }
+        scoreFontSize = 20;
+    }
+    if(scoreFontSize > 0) {
+        scoreFontSize--;
+    }
+
     if(timer < Date.now() || instantDrop) {
         block.modPos(0, 1);
         timer = Date.now() + MILLIS_PER_LEVEL[level];
     }
 
-    window.draw();
+    popUpWindow.draw();
     
 }
 
 function mousePressed() {
     if(btnControls.overlaps()) {
-        window.show(CONTROLS);
+        popUpWindow.show(CONTROLS);
     }
 }
 
@@ -231,7 +250,7 @@ function keyPressed() {
     }
 
     if(keyCode === 27) { // ESCAPE
-        window.hide();
+        popUpWindow.hide();
         if(gameOver) {
             init();
         }
@@ -242,12 +261,17 @@ function keyPressed() {
     }
 
     if(keyCode === 80) { // P
-        window.show(PAUSE);
+        paused = !paused;
+        if(paused) {
+            popUpWindow.show(PAUSE);
+        } else {
+            popUpWindow.hide();
+        }
     }
 
     if(keyCode === 82) { // R
         init();
-        window.hide();
+        popUpWindow.hide();
     }
 
     if(keyCode === 67) { // C
